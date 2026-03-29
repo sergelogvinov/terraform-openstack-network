@@ -49,16 +49,12 @@ resource "openstack_networking_subnet_v2" "private" {
 }
 
 resource "openstack_networking_subnet_v2" "metal" {
-  for_each   = { for idx, name in var.regions : name => idx }
-  region     = each.key
-  name       = "metal"
-  network_id = local.network_id[each.key].id
-  cidr       = cidrsubnet(local.network_cidr_v4, 8, 2 + (var.network_shift + each.value) * 4)
-  gateway_ip = cidrhost(cidrsubnet(local.network_cidr_v4, 8, 2 + (var.network_shift + each.value) * 4), 1)
-  allocation_pool {
-    start = cidrhost(cidrsubnet(local.network_cidr_v4, 8, 2 + (var.network_shift + each.value) * 4), 32)
-    end   = cidrhost(cidrsubnet(local.network_cidr_v4, 8, 2 + (var.network_shift + each.value) * 4), 47)
-  }
+  for_each    = { for idx, name in var.regions : name => idx }
+  region      = each.key
+  name        = "metal"
+  network_id  = local.network_id[each.key].id
+  cidr        = cidrsubnet(local.network_cidr_v4, 8, 2 + (var.network_shift + each.value) * 4)
+  no_gateway  = true
   ip_version  = 4
   enable_dhcp = false
 }

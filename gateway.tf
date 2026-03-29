@@ -13,32 +13,25 @@
 #   ip_version = 6
 # }
 
-# resource "openstack_networking_router_v2" "nat" {
-#   for_each            = { for idx, name in var.regions : name => idx if try(var.capabilities[name].gateway, false) && data.openstack_networking_quota_v2.quota[name].router > 0 }
-#   region              = each.key
-#   name                = "nat-${openstack_networking_subnet_v2.private[each.key].name}"
-#   external_network_id = data.openstack_networking_network_v2.external[each.key].id
-#   admin_state_up      = true
+resource "openstack_networking_router_v2" "nat" {
+  for_each            = { for idx, region in var.regions : region => idx if try(var.capabilities[region].nat, false) }
+  region              = each.key
+  name                = "nat-${openstack_networking_subnet_v2.private[each.key].name}"
+  external_network_id = data.openstack_networking_network_v2.external[each.key].id
+  admin_state_up      = true
 
-#   # external_fixed_ip {
-#   #   subnet_id  = data.openstack_networking_network_v2.external[each.key].id
-#   #   ip_address = [for ip in openstack_networking_port_v2.nat[each.key].all_fixed_ips : ip if length(split(".", ip)) > 1][0]
-#   # }
-# }
+  # external_fixed_ip {
+  #   subnet_id  = data.openstack_networking_network_v2.external[each.key].id
+  #   ip_address = [for ip in openstack_networking_port_v2.nat[each.key].all_fixed_ips : ip if length(split(".", ip)) > 1][0]
+  # }
+}
 
-# resource "openstack_networking_router_interface_v2" "private" {
-#   for_each  = { for idx, name in var.regions : name => idx if try(var.capabilities[name].gateway, false) && data.openstack_networking_quota_v2.quota[name].router > 0 }
-#   region    = each.key
-#   router_id = openstack_networking_router_v2.nat[each.key].id
-#   subnet_id = openstack_networking_subnet_v2.private[each.key].id
-# }
-
-# resource "openstack_networking_router_interface_v2" "metal" {
-#   for_each  = { for idx, name in var.regions : name => idx if try(var.capabilities[name].gateway, false) && data.openstack_networking_quota_v2.quota[name].router > 0 }
-#   region    = each.key
-#   router_id = openstack_networking_router_v2.nat[each.key].id
-#   subnet_id = openstack_networking_subnet_v2.metal[each.key].id
-# }
+resource "openstack_networking_router_interface_v2" "private" {
+  for_each  = { for idx, region in var.regions : region => idx if try(var.capabilities[region].nat, false) }
+  region    = each.key
+  router_id = openstack_networking_router_v2.nat[each.key].id
+  subnet_id = openstack_networking_subnet_v2.private[each.key].id
+}
 
 # ### Soft router to peering networks
 

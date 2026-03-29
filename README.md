@@ -1,3 +1,18 @@
+# Terraform module for OpenStack network
+
+## Usage Example
+
+```hcl
+module "network" {
+  source = "github.com/sergelogvinov/terraform-openstack-network"
+
+  regions = var.regions
+
+  network_name  = "main"
+  network_cidr  = ["172.16.0.0/16", "fd60:172:16::/48"]
+  network_shift = 2
+```
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -21,6 +36,8 @@ No modules.
 | Name | Type |
 |------|------|
 | [openstack_networking_network_v2.main](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs/resources/networking_network_v2) | resource |
+| [openstack_networking_router_interface_v2.private](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs/resources/networking_router_interface_v2) | resource |
+| [openstack_networking_router_v2.nat](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs/resources/networking_router_v2) | resource |
 | [openstack_networking_secgroup_rule_v2.common_cilium_health_ipv6](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs/resources/networking_secgroup_rule_v2) | resource |
 | [openstack_networking_secgroup_rule_v2.common_icmp_ipv4](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs/resources/networking_secgroup_rule_v2) | resource |
 | [openstack_networking_secgroup_rule_v2.common_icmp_ipv6](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs/resources/networking_secgroup_rule_v2) | resource |
@@ -51,7 +68,7 @@ No modules.
 | <a name="input_allowlist_admins"></a> [allowlist\_admins](#input\_allowlist\_admins) | Allowlist for administrators | `list` | <pre>[<br/>  "0.0.0.0/0"<br/>]</pre> | no |
 | <a name="input_allowlist_datacenters"></a> [allowlist\_datacenters](#input\_allowlist\_datacenters) | Allowlist for datacenters subnets | `list` | `[]` | no |
 | <a name="input_allowlist_web"></a> [allowlist\_web](#input\_allowlist\_web) | Cloudflare subnets | `list` | <pre>[<br/>  "173.245.48.0/20",<br/>  "103.21.244.0/22",<br/>  "103.22.200.0/22",<br/>  "103.31.4.0/22",<br/>  "141.101.64.0/18",<br/>  "108.162.192.0/18",<br/>  "190.93.240.0/20",<br/>  "188.114.96.0/20",<br/>  "197.234.240.0/22",<br/>  "198.41.128.0/17",<br/>  "162.158.0.0/15",<br/>  "104.16.0.0/13",<br/>  "104.24.0.0/14",<br/>  "172.64.0.0/13",<br/>  "131.0.72.0/22"<br/>]</pre> | no |
-| <a name="input_capabilities"></a> [capabilities](#input\_capabilities) | n/a | `map(any)` | <pre>{<br/>  "GRA11": {<br/>    "gateway": false,<br/>    "peering": false,<br/>    "peering_type": "d2-2"<br/>  },<br/>  "GRA9": {<br/>    "gateway": false,<br/>    "peering": false,<br/>    "peering_type": "d2-2"<br/>  },<br/>  "UK1": {<br/>    "gateway": false,<br/>    "peering": false,<br/>    "peering_type": "d2-2"<br/>  }<br/>}</pre> | no |
+| <a name="input_capabilities"></a> [capabilities](#input\_capabilities) | n/a | `map(any)` | <pre>{<br/>  "GRA11": {<br/>    "nat": false,<br/>    "peering": false,<br/>    "peering_type": "d2-2"<br/>  },<br/>  "GRA9": {<br/>    "nat": false,<br/>    "peering": false,<br/>    "peering_type": "d2-2"<br/>  },<br/>  "UK1": {<br/>    "nat": false,<br/>    "peering": false,<br/>    "peering_type": "d2-2"<br/>  }<br/>}</pre> | no |
 | <a name="input_network_cidr"></a> [network\_cidr](#input\_network\_cidr) | Local subnet rfc1918 | `list(string)` | <pre>[<br/>  "172.16.0.0/16",<br/>  "fd60:172:16::/48"<br/>]</pre> | no |
 | <a name="input_network_name"></a> [network\_name](#input\_network\_name) | n/a | `string` | `"production"` | no |
 | <a name="input_network_name_external"></a> [network\_name\_external](#input\_network\_name\_external) | n/a | `string` | `"Ext-Net"` | no |
@@ -70,5 +87,6 @@ No modules.
 | <a name="output_network_private"></a> [network\_private](#output\_network\_private) | The private network |
 | <a name="output_network_public"></a> [network\_public](#output\_network\_public) | The public network |
 | <a name="output_network_secgroup"></a> [network\_secgroup](#output\_network\_secgroup) | The Network Security Groups |
+| <a name="output_networks"></a> [networks](#output\_networks) | Regional networks |
 | <a name="output_regions"></a> [regions](#output\_regions) | Regions |
 <!-- END_TF_DOCS -->

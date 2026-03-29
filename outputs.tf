@@ -56,6 +56,14 @@ output "network_baremetal" {
   } }
 }
 
+output "networks" {
+  description = "Regional networks"
+  value = { for idx, zone in var.regions : zone => {
+    cidr_v4 = cidrsubnet(local.network_cidr_v4, 6, (var.network_shift + idx))
+    cidr_v6 = cidrsubnet(local.network_cidr_v6, 6, (var.network_shift + idx))
+  } }
+}
+
 # output "network_nat" {
 #   description = "The nat ips"
 #   value = { for idx, zone in var.regions : zone => {
