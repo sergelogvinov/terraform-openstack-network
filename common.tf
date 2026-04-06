@@ -27,7 +27,7 @@ data "openstack_networking_subnet_ids_v2" "external_v6" {
 # }
 
 resource "openstack_networking_network_v2" "main" {
-  for_each       = { for idx, region in var.regions : region => idx }
+  for_each       = { for idx, region in var.regions : region => idx if length(var.network_id) == 0 }
   region         = each.key
   name           = var.network_name
   admin_state_up = "true"

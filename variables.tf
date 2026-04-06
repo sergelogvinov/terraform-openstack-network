@@ -16,6 +16,11 @@ variable "network_name_external" {
   default = "Ext-Net"
 }
 
+variable "network_id" {
+  type    = map(any)
+  default = {}
+}
+
 variable "network_name" {
   type    = string
   default = "production"

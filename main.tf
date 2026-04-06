@@ -1,6 +1,11 @@
 
 locals {
-  network_id          = openstack_networking_network_v2.main # data.openstack_networking_network_v2.main
+  network_id = length(var.network_id) > 0 ? var.network_id : { for k, v in openstack_networking_network_v2.main : k =>
+    {
+      id  = v.id
+      mtu = v.mtu
+    }
+  }
   network_cidr_v4     = try(one([for ip in var.network_cidr : ip if length(split(".", ip)) > 1]), "")
   network_cidr_v6_tmp = try(one([for ip in var.network_cidr : ip if length(split(":", ip)) > 1]), "")
   network_cidr_v6     = cidrsubnet(local.network_cidr_v6_tmp, 0, 0) # cidrsubnet(var.network_cidr[1], 8, var.network_shift * 8)
