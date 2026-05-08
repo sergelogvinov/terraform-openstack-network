@@ -21,9 +21,9 @@ output "network_public" {
     network_id = subnet.network_id
     subnet_id  = subnet.id
     cidr_v4    = subnet.cidr
-    cidr_v6    = openstack_networking_subnet_v2.public_v6[zone].cidr
+    cidr_v6    = openstack_networking_subnet_v2.private_v6[zone].cidr
     gateway_v4 = subnet.gateway_ip != "" ? subnet.gateway_ip : cidrhost(subnet.cidr, 1)
-    gateway_v6 = cidrhost(openstack_networking_subnet_v2.public_v6[zone].cidr, 1)
+    gateway_v6 = cidrhost(openstack_networking_subnet_v2.private_v6[zone].cidr, 1)
     mtu        = local.network_id[zone].mtu
   } }
 }
@@ -34,9 +34,9 @@ output "network_private" {
     network_id = subnet.network_id
     subnet_id  = subnet.id
     cidr_v4    = subnet.cidr
-    cidr_v6    = openstack_networking_subnet_v2.public_v6[zone].cidr
+    cidr_v6    = openstack_networking_subnet_v2.private_v6[zone].cidr
     gateway_v4 = subnet.gateway_ip != "" ? subnet.gateway_ip : cidrhost(subnet.cidr, 1)
-    gateway_v6 = cidrhost(openstack_networking_subnet_v2.public_v6[zone].cidr, 1)
+    gateway_v6 = cidrhost(openstack_networking_subnet_v2.private_v6[zone].cidr, 1)
     peer       = cidrhost(openstack_networking_subnet_v2.private[zone].cidr, try(var.capabilities[zone].gateway, false) && data.openstack_networking_quota_v2.quota[zone].router > 0 ? 2 : 1)
     mtu        = local.network_id[zone].mtu
   } }
@@ -48,9 +48,9 @@ output "network_baremetal" {
     network_id = subnet.network_id
     subnet_id  = subnet.id
     cidr_v4    = subnet.cidr
-    cidr_v6    = openstack_networking_subnet_v2.public_v6[zone].cidr
+    cidr_v6    = openstack_networking_subnet_v2.private_v6[zone].cidr
     gateway_v4 = subnet.gateway_ip != "" ? subnet.gateway_ip : cidrhost(subnet.cidr, 1)
-    gateway_v6 = cidrhost(openstack_networking_subnet_v2.public_v6[zone].cidr, 1)
+    gateway_v6 = cidrhost(openstack_networking_subnet_v2.private_v6[zone].cidr, 1)
     peer       = cidrhost(openstack_networking_subnet_v2.private[zone].cidr, try(var.capabilities[zone].gateway, false) && data.openstack_networking_quota_v2.quota[zone].router > 0 ? 2 : 1)
     mtu        = local.network_id[zone].mtu
   } }
@@ -58,18 +58,26 @@ output "network_baremetal" {
 
 output "networks" {
   description = "Regional networks"
-  value = { for idx, zone in var.regions : zone => {
-    cidr_v4 = cidrsubnet(local.network_cidr_v4, 6, (var.network_shift + idx))
-    cidr_v6 = cidrsubnet(local.network_cidr_v6, 6, (var.network_shift + idx))
-  } }
+  value = merge({ for idx, zone in var.regions : zone => {
+    cidr_v4   = local.network_subnet_v4[zone]
+    cidr_v6   = local.network_subnet_v6[zone]
+    peer_gwv4 = cidrhost(openstack_networking_subnet_v2.public[zone].cidr, lookup(try(var.capabilities[zone], {}), "network_nat_enable", false) ? 2 : 1)
+    peer_gwv6 = cidrhost(openstack_networking_subnet_v2.private_v6[zone].cidr, 1)
+    } },
+    {
+      "ALL" : {
+        cidr_v4 = local.network_cidr_v4
+        cidr_v6 = local.network_cidr_v6
+      }
+  })
 }
 
-# output "network_nat" {
-#   description = "The nat ips"
-#   value = { for idx, zone in var.regions : zone => {
-#     ip_v4 = scaleway_vpc_public_gateway_ip.main[zone].address
-#   } if try(var.capabilities[zone].network_nat_enable, false) }
-# }
+output "network_nat" {
+  description = "The nat ips"
+  value = { for idx, zone in var.regions : zone => {
+    ip_v4 = [for ip in openstack_networking_router_v2.nat[zone].external_fixed_ip : ip.ip_address if length(split(".", ip.ip_address)) > 1]
+  } if lookup(try(var.capabilities[zone], {}), "network_nat_enable", false) }
+}
 
 output "network_secgroup" {
   description = "The Network Security Groups"
@@ -78,4 +86,16 @@ output "network_secgroup" {
     controlplane = openstack_networking_secgroup_v2.controlplane[zone].id
     web          = openstack_networking_secgroup_v2.web[zone].id
   } }
+}
+
+output "network_peering" {
+  value = { for k in flatten([
+    for name, v in var.regions : [{
+      name = name
+      server = {
+      }
+      client = {
+      }
+    }]
+  ]) : k.name => k }
 }

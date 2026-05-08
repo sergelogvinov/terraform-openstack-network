@@ -225,51 +225,69 @@ resource "openstack_networking_secgroup_rule_v2" "web_https_v6" {
 
 ###
 
-# resource "openstack_networking_secgroup_v2" "router" {
-#   for_each    = { for idx, name in var.regions : name => idx }
-#   region      = each.key
-#   name        = "router"
-#   description = "Security group for router/peering node"
-# }
+resource "openstack_networking_secgroup_v2" "router" {
+  for_each    = { for idx, name in var.regions : name => idx }
+  region      = each.key
+  name        = "router"
+  description = "Security group for router/peering node"
+}
 
-# resource "openstack_networking_secgroup_rule_v2" "router_icmp_ipv4" {
-#   for_each          = { for idx, name in var.regions : name => idx }
-#   region            = each.key
-#   security_group_id = openstack_networking_secgroup_v2.router[each.key].id
-#   direction         = "ingress"
-#   ethertype         = "IPv4"
-#   protocol          = "icmp"
-# }
+resource "openstack_networking_secgroup_rule_v2" "router_icmp_ipv4" {
+  for_each          = { for idx, name in var.regions : name => idx }
+  region            = each.key
+  security_group_id = openstack_networking_secgroup_v2.router[each.key].id
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "icmp"
+}
 
-# resource "openstack_networking_secgroup_rule_v2" "router_ssh_v4" {
-#   for_each          = { for idx, name in var.regions : name => idx }
-#   region            = each.key
-#   security_group_id = openstack_networking_secgroup_v2.router[each.key].id
-#   direction         = "ingress"
-#   ethertype         = "IPv4"
-#   protocol          = "tcp"
-#   port_range_min    = 22
-#   port_range_max    = 22
-# }
+resource "openstack_networking_secgroup_rule_v2" "router_ssh_v4" {
+  for_each = { for k in flatten([
+    for region in var.regions : [
+      for ip in sort(var.allowlist_admins) : {
+        name : "router-admins-${lower(region)}-${ip}"
+        region : region
+        ip : ip
+    } if length(split(".", ip)) > 1]
+  ]) : k.name => k }
 
-# resource "openstack_networking_secgroup_rule_v2" "router_ssh_v6" {
-#   for_each          = { for idx, name in var.regions : name => idx }
-#   region            = each.key
-#   security_group_id = openstack_networking_secgroup_v2.router[each.key].id
-#   direction         = "ingress"
-#   ethertype         = "IPv6"
-#   protocol          = "tcp"
-#   port_range_min    = 22
-#   port_range_max    = 22
-# }
+  region            = each.value.region
+  security_group_id = openstack_networking_secgroup_v2.router[each.value.region].id
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = 22
+  port_range_max    = 22
+  remote_ip_prefix  = each.value.ip
+}
 
-# resource "openstack_networking_secgroup_rule_v2" "router_wireguard" {
-#   for_each          = { for idx, name in var.regions : name => idx }
-#   region            = each.key
-#   security_group_id = openstack_networking_secgroup_v2.router[each.key].id
-#   direction         = "ingress"
-#   ethertype         = "IPv4"
-#   protocol          = "udp"
-#   port_range_min    = 443
-#   port_range_max    = 443
-# }
+resource "openstack_networking_secgroup_rule_v2" "router_ssh_v6" {
+  for_each = { for k in flatten([
+    for region in var.regions : [
+      for ip in sort(var.allowlist_admins) : {
+        name : "router-admins-${lower(region)}-${ip}"
+        region : region
+        ip : ip
+    } if length(split(":", ip)) > 1]
+  ]) : k.name => k }
+
+  region            = each.value.region
+  security_group_id = openstack_networking_secgroup_v2.router[each.value.region].id
+  direction         = "ingress"
+  ethertype         = "IPv6"
+  protocol          = "tcp"
+  port_range_min    = 22
+  port_range_max    = 22
+  remote_ip_prefix  = each.value.ip
+}
+
+resource "openstack_networking_secgroup_rule_v2" "router_wireguard" {
+  for_each          = { for idx, name in var.regions : name => idx }
+  region            = each.key
+  security_group_id = openstack_networking_secgroup_v2.router[each.key].id
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "udp"
+  port_range_min    = 443
+  port_range_max    = 443
+}

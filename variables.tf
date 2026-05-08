@@ -85,19 +85,19 @@ variable "capabilities" {
   type = map(any)
   default = {
     "UK1" = {
-      nat          = false
-      peering      = false
-      peering_type = "d2-2"
+      network_nat_enable  = false
+      network_peer_enable = false
+      network_peer_type   = "d2-2"
     },
     "GRA9" = {
-      nat          = false
-      peering      = false
-      peering_type = "d2-2"
+      network_nat_enable  = false
+      network_peer_enable = false
+      network_peer_type   = "d2-2"
     },
     "GRA11" = {
-      nat          = false
-      peering      = false
-      peering_type = "d2-2"
+      network_nat_enable  = false
+      network_peer_enable = false
+      network_peer_type   = "d2-2"
     },
   }
 }
