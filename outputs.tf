@@ -89,13 +89,21 @@ output "network_secgroup" {
 }
 
 output "network_peering" {
-  value = { for k in flatten([
-    for name, v in var.regions : [{
-      name = name
-      server = {
-      }
-      client = {
-      }
-    }]
-  ]) : k.name => k }
+  value = { for k, v in local.ipsec_tunnels : k => {
+    server = {
+      asn  = v.server_asn
+      ip4  = v.server_v4
+      ip6  = v.server_v6
+      p2p4 = v.server_p2p_v4
+      p2p6 = v.server_p2p_v6
+    }
+    client = {
+      asn  = v.peer_asn
+      ip4  = v.peer_v4
+      ip6  = v.peer_v6
+      p2p4 = v.peer_p2p_v4
+      p2p6 = v.peer_p2p_v6
+    }
+    }
+  }
 }

@@ -43,6 +43,22 @@ variable "network_shift" {
   default     = 4
 }
 
+variable "network_peering" {
+  type = map(any)
+  default = {
+    # "UK1" = {
+    #   "peer-1" = {
+    #     ip    = ["1.2.3.4"]
+    #     cidrs = ["172.16.0.0/22"]
+    #     # BGP parameters for the dynamic peering
+    #     asn      = 64512
+    #     p2p      = ["169.254.131.96/31", "fd00:169:254:131::/127"]
+    #     p2p_side = 0
+    #   }
+    # }
+  }
+}
+
 # curl https://www.cloudflare.com/ips-v4 2>/dev/null | awk '{ print "\""$1"\"," }'
 variable "allowlist_web" {
   description = "Cloudflare subnets"

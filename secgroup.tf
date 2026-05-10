@@ -291,3 +291,34 @@ resource "openstack_networking_secgroup_rule_v2" "router_wireguard" {
   port_range_min    = 443
   port_range_max    = 443
 }
+
+resource "openstack_networking_secgroup_rule_v2" "router_ipsec" {
+  for_each          = { for idx, name in var.regions : name => idx }
+  region            = each.key
+  security_group_id = openstack_networking_secgroup_v2.router[each.key].id
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "udp"
+  port_range_min    = 500
+  port_range_max    = 500
+}
+
+resource "openstack_networking_secgroup_rule_v2" "router_ipsec_nat" {
+  for_each          = { for idx, name in var.regions : name => idx }
+  region            = each.key
+  security_group_id = openstack_networking_secgroup_v2.router[each.key].id
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "udp"
+  port_range_min    = 4500
+  port_range_max    = 4500
+}
+
+resource "openstack_networking_secgroup_rule_v2" "router_esp" {
+  for_each          = { for idx, name in var.regions : name => idx }
+  region            = each.key
+  security_group_id = openstack_networking_secgroup_v2.router[each.key].id
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "esp"
+}
