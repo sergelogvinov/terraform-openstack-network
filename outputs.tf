@@ -63,11 +63,14 @@ output "networks" {
     cidr_v6   = local.network_subnet_v6[zone]
     peer_gwv4 = cidrhost(openstack_networking_subnet_v2.public[zone].cidr, lookup(try(var.capabilities[zone], {}), "network_nat_enable", false) ? 2 : 1)
     peer_gwv6 = cidrhost(openstack_networking_subnet_v2.private_v6[zone].cidr, 1)
+    peer_mtu  = 1420
     } },
     {
       "ALL" : {
-        cidr_v4 = local.network_cidr_v4
-        cidr_v6 = local.network_cidr_v6
+        cidr_v4    = local.network_cidr_v4
+        cidr_v6    = local.network_cidr_v6
+        network_v4 = one([for ip in var.network_cidr : ip if length(split(".", ip)) > 1])
+        network_v6 = one([for ip in var.network_cidr : ip if length(split(":", ip)) > 1])
       }
   })
 }
